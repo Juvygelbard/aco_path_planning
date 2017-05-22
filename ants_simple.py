@@ -2,9 +2,19 @@ import matplotlib.pyplot as plt
 import numpy as np
 from itertools import product
 
+# map config
+SQR_MAP = 20
+
+# algorithm config
 ALPHA = 1
-BETA = 1
-EVAPORATION = 0.5
+BETA = 2.5
+EVAPORATION = 0.2
+ANTS = 5
+
+# simulation config
+SHOW_PHEROMONES = 0
+ITERATIONS_CLEAN = 100
+ITERATIONS_OBSTICLE = 100
 
 
 class SimpleMap:
@@ -158,34 +168,24 @@ def display_path(map, path):
         d_map[y, x] = 0.5
 
     plt.imshow(d_map, interpolation="nearest", cmap="gray_r")
-    plt.annotate(
-            "START",
-            xy=(0, 0), fontsize=20,
-            bbox=dict(boxstyle='round, pad=0.5', fc='white'))
-    plt.annotate(
-            "FINISH",
-            xy=(18.5, 19),fontsize=20,
-            bbox=dict(boxstyle='round, pad=0.5', fc='white'))
     plt.show()
 
+if __name__ == '__main__':
+    # init maps
+    raw_map = np.zeros((SQR_MAP, SQR_MAP))
 
-SQR_MAP = 20
-raw_map = np.zeros((SQR_MAP, SQR_MAP))
+    # init heuristics
+    h1 = lambda y_d, x_d: y_d+x_d
+    last_x, last_y = (0, 0)
+    h2 = lambda y_d, x_d: 1 if y_d == last_y and x_d == last_x else 0.5
 
-h1 = lambda y_d, x_d: y_d+x_d
-last_x, last_y = (0, 0)
-h2 = lambda y_d, x_d: 1 if y_d == last_y and x_d == last_x else 0.5
+    # start simulation with empty map
+    smap = SimpleMap(raw_map, heuristic=h1)
+    path = smap.run(ANTS, ITERATIONS_CLEAN, show_p=SHOW_PHEROMONES)
+    display_path(smap, path)
 
-map = SimpleMap(raw_map, heuristic=h1)
-path = map.run(5, 100, show_p=50)
-display_path(map, path)
-
-o1 = Obstacle(5, 0, 8, 15)
-map.add_obstacles_local([o1])
-path = map.run(5, 100, show_p=50)
-display_path(map, path)
-
-o2 = Obstacle(14, 10, 16, 19)
-map.add_obstacles_local([o2])
-path = map.run(5, 100, show_p=50)
-display_path(map, path)
+    # add obsticle
+    o1 = Obstacle(10, 0, 11, 15)
+    smap.add_obstacles_global([o1])
+    path = smap.run(ANTS, ITERATIONS_OBSTICLE, show_p=SHOW_PHEROMONES)
+    display_path(smap, path)
